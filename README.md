@@ -83,8 +83,6 @@ Is one of the most widely used logging frameworks in the Java Community.
 
 # End Points
 
-SmartyPants converts ASCII punctuation characters into "smart" typographic punctuation HTML entities. For example:
-
 |       Vreb         |Path                        			|description|
 |----------------|------------------------------------------|-----------------------------|
 |GET             |`localhost:8080/api/v1/comments`  		|Make a REST call to this URL ( “ https://jsonplaceholder.typicode.com/comments ” ) and get all the data available and store it into a Database ( MySQL )          |
