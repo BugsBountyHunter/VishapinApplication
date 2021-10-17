@@ -43,7 +43,6 @@ public class CommentCriteriaRepository {
         setOrder(commentPage, criteriaQuery, commentRoot);
 
         TypedQuery<Comment> typedQuery = entityManager.createQuery(criteriaQuery);
-        TypedQuery<Comment[]> typedQuery2 = entityManager.createQuery(Constants.FIND_COMMENTS, Comment[].class);
         typedQuery.setFirstResult(commentPage.getPageNumber() * commentPage.getPageSize());
         typedQuery.setMaxResults(commentPage.getPageSize());
 

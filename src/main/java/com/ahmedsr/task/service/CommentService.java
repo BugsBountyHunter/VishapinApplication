@@ -8,15 +8,15 @@ import com.ahmedsr.task.model.CommentSearchCriteria;
 import com.ahmedsr.task.repository.CommentCriteriaRepository;
 import com.ahmedsr.task.repository.CommentRepository;
 import com.ahmedsr.task.utils.Constants;
-import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.client.RestTemplate;
@@ -24,9 +24,8 @@ import org.springframework.web.client.RestTemplate;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.*;
 
@@ -36,14 +35,16 @@ public class CommentService {
     private final RestTemplate restTemplate;
     private final CommentRepository commentRepository;
     private final CommentCriteriaRepository commentCriteriaRepository;
+    private final ResourceLoader resourceLoader;
 
     //== Constructor ==
     @Autowired
-    public CommentService(RestTemplateBuilder restTemplateBuilder, CommentRepository commentRepository, CommentCriteriaRepository commentCriteriaRepository) {
+    public CommentService(RestTemplateBuilder restTemplateBuilder, CommentRepository commentRepository, CommentCriteriaRepository commentCriteriaRepository, ResourceLoader resourceLoader) {
         //  By default, RestTemplate has infinite timeouts. But we can change this behavior by set connection and read timeouts
         this.restTemplate = restTemplateBuilder.setConnectTimeout(Duration.ofSeconds(5000)).setReadTimeout(Duration.ofSeconds(5000)).build();
         this.commentRepository = commentRepository;
         this.commentCriteriaRepository = commentCriteriaRepository;
+        this.resourceLoader = resourceLoader;
     }
 
     // == public method ==
@@ -100,7 +101,10 @@ public class CommentService {
 
     public String exportReport(String reportFormat) throws IOException, JRException {
         //TODO:- need to
-        BufferedImage image = ImageIO.read(getClass().getResource("/assets/nisLOGO.jpeg"));
+//        File imageFile = ResourceUtils.getInputStream("classpath:assets/nisLOGO.jpeg");
+        Resource imageFile = resourceLoader.getResource("classpath:assets/nisLOGO.jpeg");
+        BufferedImage image = ImageIO.read(imageFile.getInputStream());
+
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("createdBy", "Ahmed Saber");
         parameters.put("logo", image );
@@ -114,8 +118,10 @@ public class CommentService {
         List<Comment> comments = pageComments.getContent();
 
         //load file and compile it
-        File file = ResourceUtils.getFile("classpath:report.jrxml");
-        JasperReport jasperReport = JasperCompileManager.compileReport(file.getAbsolutePath());
+        Resource reportFile = resourceLoader.getResource("classpath:report.jrxml");
+        InputStream file = reportFile.getInputStream();
+
+        JasperReport jasperReport = JasperCompileManager.compileReport(file);
         JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(comments);
 
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
